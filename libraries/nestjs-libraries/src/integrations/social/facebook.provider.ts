@@ -10,6 +10,7 @@ import { makeSecureId } from '@gitroom/nestjs-libraries/services/make.secure.id'
 import dayjs from 'dayjs';
 import {
   BadBody,
+  NotEnoughScopes,
   SocialAbstract,
   ValidityMedia,
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
@@ -338,46 +339,62 @@ export class FacebookProvider extends SocialAbstract implements SocialProvider {
     codeVerifier: string;
     refresh?: string;
   }) {
-    const getAccessToken = await (
-      await fetch(
-        `https://graph.facebook.com/${META_GRAPH_API_VERSION}/oauth/access_token` +
-          `?client_id=${process.env.FACEBOOK_APP_ID}` +
-          `&redirect_uri=${encodeURIComponent(
-            `${process.env.FRONTEND_URL}/integrations/social/facebook${
-              params.refresh ? `?refresh=${params.refresh}` : ''
-            }`
-          )}` +
-          `&client_secret=${process.env.FACEBOOK_APP_SECRET}` +
-          `&code=${params.code}`
-      )
-    ).json();
+    if (!process.env.FACEBOOK_APP_ID || !process.env.FACEBOOK_APP_SECRET) {
+      throw new NotEnoughScopes(
+        'Facebook is not configured. Ask your administrator to set FACEBOOK_APP_ID and FACEBOOK_APP_SECRET.'
+      );
+    }
 
-    const { access_token } = await (
-      await fetch(
-        `https://graph.facebook.com/${META_GRAPH_API_VERSION}/oauth/access_token` +
-          '?grant_type=fb_exchange_token' +
-          `&client_id=${process.env.FACEBOOK_APP_ID}` +
-          `&client_secret=${process.env.FACEBOOK_APP_SECRET}` +
-          `&fb_exchange_token=${getAccessToken.access_token}&fields=access_token,expires_in`
-      )
-    ).json();
+    const getAccessToken = await this.fetchAuthentication(
+      `https://graph.facebook.com/${META_GRAPH_API_VERSION}/oauth/access_token` +
+        `?client_id=${process.env.FACEBOOK_APP_ID}` +
+        `&redirect_uri=${encodeURIComponent(
+          `${process.env.FRONTEND_URL}/integrations/social/facebook`
+        )}` +
+        `&client_secret=${process.env.FACEBOOK_APP_SECRET}` +
+        `&code=${encodeURIComponent(params.code)}`,
+      'authorization code exchange',
+      'access_token'
+    );
 
-    const { data } = await (
-      await fetch(
-        `https://graph.facebook.com/${META_GRAPH_API_VERSION}/me/permissions?access_token=${access_token}`
-      )
-    ).json();
+    const { access_token } = await this.fetchAuthentication(
+      `https://graph.facebook.com/${META_GRAPH_API_VERSION}/oauth/access_token` +
+        '?grant_type=fb_exchange_token' +
+        `&client_id=${process.env.FACEBOOK_APP_ID}` +
+        `&client_secret=${process.env.FACEBOOK_APP_SECRET}` +
+        `&fb_exchange_token=${encodeURIComponent(
+          getAccessToken.access_token
+        )}&fields=access_token,expires_in`,
+      'long-lived token exchange',
+      'access_token'
+    );
+
+    const { data } = await this.fetchAuthentication(
+      `https://graph.facebook.com/${META_GRAPH_API_VERSION}/me/permissions?access_token=${encodeURIComponent(
+        access_token
+      )}`,
+      'permissions lookup',
+      'data'
+    );
+
+    if (!Array.isArray(data)) {
+      throw new NotEnoughScopes(
+        'Facebook returned invalid permissions. Please connect the channel again.'
+      );
+    }
 
     const permissions = data
       .filter((d: any) => d.status === 'granted')
       .map((p: any) => p.permission);
     this.checkScopes(this.scopes, permissions);
 
-    const { id, name, picture } = await (
-      await fetch(
-        `https://graph.facebook.com/${META_GRAPH_API_VERSION}/me?fields=id,name,picture&access_token=${access_token}`
-      )
-    ).json();
+    const { id, name, picture } = await this.fetchAuthentication(
+      `https://graph.facebook.com/${META_GRAPH_API_VERSION}/me?fields=id,name,picture&access_token=${encodeURIComponent(
+        access_token
+      )}`,
+      'profile lookup',
+      'id'
+    );
 
     return {
       id,
@@ -388,6 +405,69 @@ export class FacebookProvider extends SocialAbstract implements SocialProvider {
       picture: picture?.data?.url || '',
       username: '',
     };
+  }
+
+  private async fetchAuthentication(
+    url: string,
+    step: string,
+    requiredField: string
+  ) {
+    let response: Response;
+    let result: any;
+    try {
+      response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+      result = await response.json();
+    } catch {
+      // Fetch errors can contain the request URL, including app secrets/tokens.
+      throw new NotEnoughScopes(
+        `Could not reach Facebook during ${step}. Please try connecting again.`
+      );
+    }
+
+    if (!response.ok || result?.error) {
+      const error = result?.error;
+      const code = typeof error?.code === 'number' ? error.code : undefined;
+      const subcode =
+        typeof error?.error_subcode === 'number'
+          ? error.error_subcode
+          : undefined;
+      const reference =
+        code === undefined
+          ? `HTTP ${response.status}`
+          : `code ${code}${
+              subcode === undefined ? '' : `, subcode ${subcode}`
+            }`;
+      const message = typeof error?.message === 'string' ? error.message : '';
+      let advice = 'Please start a new Facebook connection and try again.';
+      if (/redirect_uri|redirect uri/i.test(message)) {
+        advice =
+          'Ask your administrator to check FRONTEND_URL and the Facebook app OAuth redirect URI; they must use the same callback URL.';
+      } else if (
+        /client secret|app secret|application id|app id/i.test(message)
+      ) {
+        advice =
+          'Ask your administrator to check FACEBOOK_APP_ID and FACEBOOK_APP_SECRET belong to the same Facebook app.';
+      } else if (
+        /expired|already.*used|been used|authorization code|verification code/i.test(
+          message
+        )
+      ) {
+        advice =
+          'The Facebook login code expired or was already used. Start a new connection from Channels instead of reloading this callback page.';
+      }
+      // Return only controlled text and numeric codes, never raw provider data.
+      throw new NotEnoughScopes(
+        `Facebook authentication failed during ${step} (${reference}). ${advice}`
+      );
+    }
+
+    if (!result?.[requiredField]) {
+      throw new NotEnoughScopes(
+        `Facebook returned an incomplete response during ${step}. Please connect the channel again.`
+      );
+    }
+
+    return result;
   }
 
   @DashboardFunction()
