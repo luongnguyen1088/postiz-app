@@ -51,26 +51,10 @@ jobs:
 
       - name: Trigger Dokploy Redeploy
         if: success()
-        env:
-          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
         run: |
-          if [ -n "$DOKPLOY_API_KEY" ]; then
-            echo "Triggering Dokploy redeploy via API..."
-            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://do2.claro.vn/api/compose.redeploy" \
-              -H "Content-Type: application/json" \
-              -H "x-api-key: $DOKPLOY_API_KEY" \
-              -d "{\"composeId\": \"L2NjD011SQyEKUcDW2nnU\", \"title\": \"GitHub Actions deploy: ${{ github.sha }}\"}"
-            )
-            HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
-            BODY=$(echo "$RESPONSE" | sed '$d')
-            echo "HTTP Status: $HTTP_STATUS"
-            echo "Response: $BODY"
-            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-              echo "Dokploy redeploy triggered successfully."
-            else
-              echo "Warning: Dokploy redeploy returned status $HTTP_STATUS"
-            fi
-          else
-            echo "DOKPLOY_API_KEY secret is not configured in GitHub Repository Secrets yet."
-            echo "Skipping automatic Dokploy webhook trigger. Dokploy can be redeployed manually or after adding DOKPLOY_API_KEY."
-          fi
+          echo "Triggering Dokploy redeploy via Webhook..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://do2.claro.vn/api/deploy/compose/ei5IfC6WiEu_S_GTIHvrZ")
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Response: $BODY"
