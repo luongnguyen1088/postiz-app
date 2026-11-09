@@ -10,7 +10,7 @@ export const LogoTextComponent = () => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="social"
+      aria-label="Social"
     >
       <SocialLogoMark />
       <text
@@ -22,7 +22,7 @@ export const LogoTextComponent = () => {
         fontWeight="700"
         letterSpacing="-2"
       >
-        social
+        Social
       </text>
     </svg>
   );

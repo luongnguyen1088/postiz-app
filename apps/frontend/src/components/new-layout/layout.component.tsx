@@ -45,6 +45,7 @@ import { FirstBillingComponent } from '@gitroom/frontend/components/billing/firs
 import { TrialTracker } from '@gitroom/frontend/components/layout/gtm.component';
 import { setSentryUser } from '@gitroom/react/sentry/initialize.sentry.client';
 import { setUserTimezone } from '@gitroom/frontend/components/layout/set.timezone';
+import { CommandPalette } from '@gitroom/frontend/components/layout/command.palette';
 
 export const LayoutComponent = ({ children }: { children: ReactNode }) => {
   const fetch = useFetch();
@@ -90,6 +91,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         <MantineWrapper>
           <ToolTip />
           <Toaster />
+          <CommandPalette />
           <TrialTracker />
           <CheckPayment check={searchParams.get('check') || ''} mutate={mutate}>
             <ShowMediaBoxModal />
@@ -167,6 +169,31 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                         <div className="text-[24px] mobile:text-[20px] font-[600] flex flex-1 min-w-0">
                           <Title />
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+                          className="hidden md:flex items-center gap-[8px] px-[12px] py-[6px] rounded-[10px] bg-newBgColor hover:bg-boxHover border border-newBorder text-[13px] text-textItemBlur hover:text-newTextColor transition-all cursor-pointer"
+                          title="Search or commands (⌘K / Ctrl+K)"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                          </svg>
+                          <span className="font-medium text-[12px]">Commands</span>
+                          <kbd className="inline-flex items-center gap-[2px] rounded-[6px] bg-blockSeparator px-[6px] py-[2px] text-[10px] font-mono text-textItemBlur">
+                            <span>⌘</span>K
+                          </kbd>
+                        </button>
                         <div className="flex gap-[20px] mobile:gap-[14px] mobile:items-center text-textItemBlur">
                           <StreakComponent />
                           <div className="w-[1px] h-[20px] bg-blockSeparator mobile:hidden" />

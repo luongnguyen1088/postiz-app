@@ -90,7 +90,7 @@ export const FirstBillingComponent = () => {
 
   const showYouTube = () => {
     modals.openModal({
-      title: 'Grow Fast With social (Play the video)',
+      title: 'Grow Fast With Social (Play the video)',
       children: (
         <iframe
           className="h-full aspect-video min-w-[800px]"
@@ -137,7 +137,7 @@ export const FirstBillingComponent = () => {
           {t('billing_who_use', 'who use')}{' '}
           {t(
             'billing_postiz_grow_social',
-            'social To Grow Their Social Presence'
+            'Social To Grow Their Social Presence'
           )}
         </div>
 

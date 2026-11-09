@@ -8,6 +8,7 @@ import ImageWithFallback from '@gitroom/react/helpers/image.with.fallback';
 import SafeImage from '@gitroom/react/helpers/safe.image';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { RenderAnalytics } from '@gitroom/frontend/components/platform-analytics/render.analytics';
+import { BestTimeHeatmap } from '@gitroom/frontend/components/platform-analytics/best.time.heatmap';
 import { Select } from '@gitroom/react/form/select';
 import { Button } from '@gitroom/react/form/button';
 import { useRouter } from 'next/navigation';
@@ -296,9 +297,12 @@ export const PlatformAnalytics = () => {
                 ))}
               </Select>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col gap-[24px]">
               {!!keys && !!currentIntegration && !refresh && (
                 <RenderAnalytics integration={currentIntegration} date={keys} />
+              )}
+              {!!currentIntegration && (
+                <BestTimeHeatmap provider={currentIntegration?.identifier} />
               )}
             </div>
           </div>

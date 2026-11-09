@@ -12,7 +12,7 @@ export const Logo = () => {
       fill="none"
       className="mt-[8px] min-w-[60px] min-h-[60px]"
       role="img"
-      aria-label="social"
+      aria-label="Social"
     >
       <SocialLogoMark />
     </svg>

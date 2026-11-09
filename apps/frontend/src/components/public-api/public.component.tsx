@@ -35,7 +35,7 @@ export const mcpConnectorUrls = {
 // the agent installs the CLI itself and asks you for the API key
 export const chatOnlyMcpClients = {
   'Grok Bot':
-    'Install the social CLI with `npm install -g postiz`, then install the social skill with `npx skills add gitroomhq/postiz-agent`. Ask me for my social API key and set it as the POSTIZ_API_KEY environment variable before using the CLI.',
+    'Install the Social CLI with `npm install -g postiz`, then install the Social skill with `npx skills add gitroomhq/postiz-agent`. Ask me for my Social API key and set it as the POSTIZ_API_KEY environment variable before using the CLI.',
 } as const;
 
 export const mcpClients = [
@@ -354,7 +354,7 @@ const McpSection = ({
           <div className="text-[13px] text-customColor18 mt-[2px]">
             {t(
               'connect_your_mcp_client_to_postiz_to_schedule_your_posts_faster',
-              'Connect social MCP server to your client (Http streaming) to schedule your posts faster.'
+              'Connect Social MCP server to your client (Http streaming) to schedule your posts faster.'
             )}
           </div>
         </div>
@@ -792,7 +792,7 @@ const PublicApiContent = () => {
             <div className="text-[13px] text-customColor18 mt-[2px]">
               {t(
                 'use_postiz_api_to_integrate_with_your_tools',
-                'Use social API to integrate with your tools.'
+                'Use Social API to integrate with your tools.'
               )}
             </div>
           </div>
