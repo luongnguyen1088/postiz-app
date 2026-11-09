@@ -45,9 +45,11 @@ import { FirstBillingComponent } from '@gitroom/frontend/components/billing/firs
 import { TrialTracker } from '@gitroom/frontend/components/layout/gtm.component';
 import { setSentryUser } from '@gitroom/react/sentry/initialize.sentry.client';
 import { setUserTimezone } from '@gitroom/frontend/components/layout/set.timezone';
+import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { CommandPalette } from '@gitroom/frontend/components/layout/command.palette';
 
 export const LayoutComponent = ({ children }: { children: ReactNode }) => {
+  const t = useT();
   const fetch = useFetch();
 
   const { backendUrl, billingEnabled, isGeneral } = useVariables();
@@ -173,7 +175,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                           type="button"
                           onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
                           className="hidden md:flex items-center gap-[8px] px-[12px] py-[6px] rounded-[10px] bg-newBgColor hover:bg-boxHover border border-newBorder text-[13px] text-textItemBlur hover:text-newTextColor transition-all cursor-pointer"
-                          title="Search or commands (⌘K / Ctrl+K)"
+                          title={`${t('command_palette.title', 'Bảng lệnh')} (⌘K / Ctrl+K)`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -189,7 +191,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                             <circle cx="11" cy="11" r="8" />
                             <path d="m21 21-4.3-4.3" />
                           </svg>
-                          <span className="font-medium text-[12px]">Commands</span>
+                          <span className="font-medium text-[12px]">{t('command_palette.button', 'Lệnh')}</span>
                           <kbd className="inline-flex items-center gap-[2px] rounded-[6px] bg-blockSeparator px-[6px] py-[2px] text-[10px] font-mono text-textItemBlur">
                             <span>⌘</span>K
                           </kbd>
