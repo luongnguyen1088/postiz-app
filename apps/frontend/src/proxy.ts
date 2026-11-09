@@ -44,6 +44,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (
+    nextUrl.pathname === '/' ||
     nextUrl.pathname.startsWith('/uploads/') ||
     nextUrl.pathname.startsWith('/p/') ||
     nextUrl.pathname.startsWith('/provider/') ||
@@ -52,6 +53,11 @@ export async function proxy(request: NextRequest) {
     // itself (sign in and come back, or connect a self-hosted instance)
     nextUrl.pathname.startsWith('/oauth/authorize')
   ) {
+    if (nextUrl.pathname === '/' && authCookie) {
+      return NextResponse.redirect(
+        new URL(!!process.env.IS_GENERAL ? '/launches' : '/analytics', nextUrl.href)
+      );
+    }
     return topResponse;
   }
 
@@ -91,7 +97,7 @@ export async function proxy(request: NextRequest) {
 
   const org = nextUrl.searchParams.get('org');
   const url = new URL(nextUrl).search;
-  if (!nextUrl.pathname.startsWith('/auth') && !authCookie) {
+  if (!nextUrl.pathname.startsWith('/auth') && nextUrl.pathname !== '/' && !authCookie) {
     const providers = ['google', 'settings'];
     const findIndex = providers.find((p) => nextUrl.href.indexOf(p) > -1);
     const additional = !findIndex
@@ -160,15 +166,6 @@ export async function proxy(request: NextRequest) {
       }
       return redirect;
     }
-    if (nextUrl.pathname === '/') {
-      return NextResponse.redirect(
-        new URL(
-          !!process.env.IS_GENERAL ? '/launches' : `/analytics`,
-          nextUrl.href
-        )
-      );
-    }
-
     return topResponse;
   } catch (err) {
     console.log('err', err);
